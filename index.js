@@ -1,5 +1,6 @@
 const { Telegraf } = require('telegraf');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const express = require('express');
 require('dotenv').config();
 
 // ตั้งค่า API Key และ Token จากไฟล์ .env
@@ -49,13 +50,34 @@ bot.on('text', async (ctx) => {
 });
 
 // เริ่มทำงานบอท
-bot.launch()
-  .then(() => {
-    console.log('Bot is running...');
-  })
-  .catch((err) => {
-    console.error('Error launching bot:', err);
-  });
+// *** แทนที่ bot.launch() ที่มีอยู่เดิมด้วยโค้ดด้านล่างนี้ทั้งหมด ***
+
+// เพิ่มโค้ดส่วนนี้เพื่อเปิดพอร์ตสำหรับ Render
+const app = express();
+const port = process.env.PORT || 3000;
+
+// สร้าง Route ง่ายๆ เพื่อให้ Render ตรวจสอบได้ว่า Service ทำงานอยู่
+app.get('/', (req, res) => {
+  res.send('Telegram bot is running!');
+});
+
+// 4. เริ่มการทำงานของบอทและ Web Server
+bot.launch(); // เริ่มบอท
+app.listen(port, () => { // เริ่ม Web Server
+  console.log(`Server is running on port ${port}`);
+});
+
+// การจัดการ graceful shutdown
+process.once('SIGINT', () => {
+    bot.stop('SIGINT');
+    console.log('Shutting down server...');
+    process.exit();
+});
+process.once('SIGTERM', () => {
+    bot.stop('SIGTERM');
+    console.log('Shutting down server...');
+    process.exit();
+});
 
 // ปิดบอทเมื่อถูกสั่งให้หยุด
 process.once('SIGINT', () => bot.stop('SIGINT'));
