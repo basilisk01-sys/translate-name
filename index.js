@@ -54,7 +54,7 @@ bot.on('text', async (ctx) => {
 
 // เพิ่มโค้ดส่วนนี้เพื่อเปิดพอร์ตสำหรับ Render
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3100;
 
 // สร้าง Route ง่ายๆ เพื่อให้ Render ตรวจสอบได้ว่า Service ทำงานอยู่
 app.get('/', (req, res) => {
@@ -82,3 +82,4 @@ process.once('SIGTERM', () => {
 // ปิดบอทเมื่อถูกสั่งให้หยุด
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
+
