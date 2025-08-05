@@ -1,0 +1,62 @@
+const { Telegraf } = require('telegraf');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+require('dotenv').config();
+
+// ตั้งค่า API Key และ Token จากไฟล์ .env
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+// ตรวจสอบว่ามี Token และ API Key หรือไม่
+if (!TELEGRAM_BOT_TOKEN || !GEMINI_API_KEY) {
+  console.error('Error: Please provide TELEGRAM_BOT_TOKEN and GEMINI_API_KEY in the .env file.');
+  process.exit(1);
+}
+
+const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+
+// ตั้งค่ารุ่นของ Gemini ที่จะใช้
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+
+// คำสั่ง /start
+bot.start((ctx) => {
+  ctx.reply('ส่งชื่อภาษาไทยที่คุณต้องการแปลงเป็นภาษาอังกฤษได้เลยครับ!');
+});
+
+// ดักจับข้อความทั้งหมดที่ผู้ใช้ส่งมา
+bot.on('text', async (ctx) => {
+  const userName = ctx.from.first_name || 'ผู้ใช้';
+  const userMessage = ctx.message.text;
+
+  // แจ้งให้ผู้ใช้รู้ว่ากำลังประมวลผลอยู่
+  ctx.replyWithChatAction('typing');
+
+  try {
+    // ส่งข้อความไปที่ Gemini API
+    const result = await model.generateContent(`แปลงชื่อภาษาไทยนี้เป็นภาษาอังกฤษ: "${userMessage}" โดยให้ผลลัพธ์เป็นชื่อภาษาอังกฤษเท่านั้น`);
+    const response = await result.response;
+    const text = response.text();
+    console.log({ "Username" : userName,
+                  "userMessage" : userMessage,
+                  "text" : text
+                  });
+    // ส่งข้อความตอบกลับจาก Gemini 
+    ctx.reply(text);
+  } catch (error) {
+    console.error('Error communicating with Gemini API:', error);
+    ctx.reply('ขออภัยครับ เกิดข้อผิดพลาดบางอย่าง ลองใหม่อีกครั้งนะครับ.');
+  }
+});
+
+// เริ่มทำงานบอท
+bot.launch()
+  .then(() => {
+    console.log('Bot is running...');
+  })
+  .catch((err) => {
+    console.error('Error launching bot:', err);
+  });
+
+// ปิดบอทเมื่อถูกสั่งให้หยุด
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
