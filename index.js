@@ -37,10 +37,11 @@ bot.on('text', async (ctx) => {
     const result = await model.generateContent(`แปลงชื่อภาษาไทยนี้เป็นภาษาอังกฤษ: "${userMessage}" โดยให้ผลลัพธ์เป็นชื่อภาษาอังกฤษเท่านั้น`);
     const response = await result.response;
     const text = response.text();
-    console.log({ "Username" : userName,
-                  "userMessage" : userMessage,
-                  "text" : text
-                  });
+    console.log({ 
+      "Username": userName,
+      "userMessage": userMessage,
+      "text": text
+    });
     // ส่งข้อความตอบกลับจาก Gemini 
     ctx.reply(text);
   } catch (error) {
@@ -49,10 +50,7 @@ bot.on('text', async (ctx) => {
   }
 });
 
-// เริ่มทำงานบอท
-// *** แทนที่ bot.launch() ที่มีอยู่เดิมด้วยโค้ดด้านล่างนี้ทั้งหมด ***
-
-// เพิ่มโค้ดส่วนนี้เพื่อเปิดพอร์ตสำหรับ Render
+// ส่วนของโค้ดที่เพิ่มและแก้ไขเพื่อเปิดพอร์ตสำหรับ Render
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -61,26 +59,20 @@ app.get('/', (req, res) => {
   res.send('Telegram bot is running!');
 });
 
-// 4. เริ่มการทำงานของบอทและ Web Server
+// เริ่มการทำงานของบอทและ Web Server
 bot.launch(); // เริ่มบอท
 app.listen(port, () => { // เริ่ม Web Server
   console.log(`Server is running on port ${port}`);
 });
 
-// การจัดการ graceful shutdown
+// การจัดการ graceful shutdown (ลบส่วนที่ซ้ำซ้อนออกไปแล้ว)
 process.once('SIGINT', () => {
-    bot.stop('SIGINT');
-    console.log('Shutting down server...');
-    process.exit();
+  bot.stop('SIGINT');
+  console.log('Shutting down server...');
+  process.exit();
 });
 process.once('SIGTERM', () => {
-    bot.stop('SIGTERM');
-    console.log('Shutting down server...');
-    process.exit();
+  bot.stop('SIGTERM');
+  console.log('Shutting down server...');
+  process.exit();
 });
-
-// ปิดบอทเมื่อถูกสั่งให้หยุด
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
-
-
